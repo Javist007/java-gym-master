@@ -29,14 +29,19 @@ class TimetableTest {
 
         timetable.addNewTrainingSession(singleTrainingSession);
 
-        // за понедельник вернулось одно занятие
-        Collection<TrainingSession> monday = timetable.getTrainingSessionsForDay(DayOfWeek.MONDAY);
-        assertEquals(1, monday.size());
-        assertTrue(monday.contains(singleTrainingSession));
+        // за понедельник – одна запись
+        NavigableMap<TimeOfDay, List<TrainingSession>> mondayMap =
+                timetable.getTrainingSessionsForDay(DayOfWeek.MONDAY);
+        assertEquals(1, mondayMap.size());
+        TimeOfDay key = new TimeOfDay(13, 0);
+        assertTrue(mondayMap.containsKey(key));
+        assertEquals(singleTrainingSession,
+                mondayMap.get(key).getFirst());
 
-        // за вторник не вернулось занятий
-        Collection<TrainingSession> tuesday = timetable.getTrainingSessionsForDay(DayOfWeek.TUESDAY);
-        assertTrue(tuesday.isEmpty());
+        // за вторник – пустая карта
+        NavigableMap<TimeOfDay, List<TrainingSession>> tuesdayMap =
+                timetable.getTrainingSessionsForDay(DayOfWeek.TUESDAY);
+        assertTrue(tuesdayMap.isEmpty());
     }
 
     /**
@@ -95,21 +100,30 @@ class TimetableTest {
         timetable.addNewTrainingSession(thursdayChildTrainingSession);
         timetable.addNewTrainingSession(saturdayChildTrainingSession);
 
-        // за понедельник – одно занятие
-        Collection<TrainingSession> monday = timetable.getTrainingSessionsForDay(DayOfWeek.MONDAY);
-        assertEquals(1, monday.size());
-        assertTrue(monday.contains(mondayChildTrainingSession));
+        // понедельник
+        NavigableMap<TimeOfDay, List<TrainingSession>> mondayMap =
+                timetable.getTrainingSessionsForDay(DayOfWeek.MONDAY);
+        assertEquals(1, mondayMap.size());
+        assertTrue(mondayMap.containsKey(new TimeOfDay(13, 0)));
+        assertEquals(mondayChildTrainingSession,
+                mondayMap.get(new TimeOfDay(13, 0)).getFirst());
 
-        // за четверг – два занятия в правильном порядке: 13:00 → 20:00
-        Collection<TrainingSession> thursday = timetable.getTrainingSessionsForDay(DayOfWeek.THURSDAY);
-        assertEquals(2, thursday.size());
-        List<TrainingSession> list = new ArrayList<>(thursday);
-        assertEquals(new TimeOfDay(13, 0), list.get(0).getTimeOfDay());
-        assertEquals(new TimeOfDay(20, 0), list.get(1).getTimeOfDay());
+        // четверг – два ключа
+        NavigableMap<TimeOfDay, List<TrainingSession>> thursdayMap =
+                timetable.getTrainingSessionsForDay(DayOfWeek.THURSDAY);
+        assertEquals(2, thursdayMap.size());
+        assertTrue(thursdayMap.containsKey(new TimeOfDay(13, 0)));
+        assertTrue(thursdayMap.containsKey(new TimeOfDay(20, 0)));
 
-        // за вторник – нет занятий
-        Collection<TrainingSession> tuesday = timetable.getTrainingSessionsForDay(DayOfWeek.TUESDAY);
-        assertTrue(tuesday.isEmpty());
+        // проверяем порядок ключей (сортировка по времени)
+        Iterator<TimeOfDay> it = thursdayMap.keySet().iterator();
+        assertEquals(new TimeOfDay(13, 0), it.next());
+        assertEquals(new TimeOfDay(20, 0), it.next());
+
+        // вторник – пустая карта
+        NavigableMap<TimeOfDay, List<TrainingSession>> tuesdayMap =
+                timetable.getTrainingSessionsForDay(DayOfWeek.TUESDAY);
+        assertTrue(tuesdayMap.isEmpty());
     }
 
     /**
@@ -133,13 +147,20 @@ class TimetableTest {
         timetable.addNewTrainingSession(ts1);
         timetable.addNewTrainingSession(ts2);
 
-        Collection<TrainingSession> weekDay = timetable.getTrainingSessionsForDay(DayOfWeek.WEDNESDAY);
-        assertEquals(2, weekDay.size());
-        assertTrue(weekDay.contains(ts1));
-        assertTrue(weekDay.contains(ts2));
+        /* --- проверяем карту за день (два ключа → два списка) --- */
+        NavigableMap<TimeOfDay, List<TrainingSession>> weekDayMap =
+                timetable.getTrainingSessionsForDay(DayOfWeek.WEDNESDAY);
+        assertEquals(1, weekDayMap.size());          // только один ключ – 10:00
+        List<TrainingSession> list = weekDayMap.get(time);
+        assertNotNull(list);
+        assertEquals(2, list.size());
+        assertTrue(list.contains(ts1));
+        assertTrue(list.contains(ts2));
 
-        Collection<TrainingSession> slot = timetable.getTrainingSessionsForDayAndTime(
-                DayOfWeek.WEDNESDAY, time);
+        /* --- проверяем отдельный слот (как раньше) --- */
+        Collection<TrainingSession> slot =
+                timetable.getTrainingSessionsForDayAndTime(
+                        DayOfWeek.WEDNESDAY, time);
         assertEquals(2, slot.size());
     }
 
@@ -197,14 +218,13 @@ class TimetableTest {
                 DayOfWeek.MONDAY, new TimeOfDay(9, 0));
         timetable.addNewTrainingSession(ts);
 
-        // Получаем занятия за понедельник
-        Collection<TrainingSession> daySessions =
+        /* --- проверяем неизменяемость карты за день --- */
+        NavigableMap<TimeOfDay, List<TrainingSession>> daySessions =
                 timetable.getTrainingSessionsForDay(DayOfWeek.MONDAY);
         assertThrows(UnsupportedOperationException.class,
-                () -> daySessions.add(new TrainingSession(group, coach,
-                        DayOfWeek.MONDAY, new TimeOfDay(10, 0))));
+                () -> daySessions.put(new TimeOfDay(10, 0), new ArrayList<>()));
 
-        // Получаем занятия за конкретное время
+        /* --- проверяем неизменяемость списка‑слота (как было до изменений) --- */
         Collection<TrainingSession> slotSessions =
                 timetable.getTrainingSessionsForDayAndTime(DayOfWeek.MONDAY,
                         new TimeOfDay(9, 0));
@@ -235,11 +255,18 @@ class TimetableTest {
         timetable.addNewTrainingSession(ts2);
         timetable.addNewTrainingSession(ts3);
 
-        List<TrainingSession> list =
-                new ArrayList<>(timetable.getTrainingSessionsForDay(DayOfWeek.FRIDAY));
-        assertEquals(3, list.size());
-        assertEquals(new TimeOfDay(13, 0), list.get(0).getTimeOfDay());
-        assertEquals(new TimeOfDay(15, 0), list.get(1).getTimeOfDay());
-        assertEquals(new TimeOfDay(20, 0), list.get(2).getTimeOfDay());
+        NavigableMap<TimeOfDay, List<TrainingSession>> fridayMap =
+                timetable.getTrainingSessionsForDay(DayOfWeek.FRIDAY);
+        assertEquals(3, fridayMap.size());
+
+        Iterator<TimeOfDay> it = fridayMap.keySet().iterator();
+        assertEquals(new TimeOfDay(13, 0), it.next());
+        assertEquals(new TimeOfDay(15, 0), it.next());
+        assertEquals(new TimeOfDay(20, 0), it.next());
+
+        // проверяем корректность списка по каждому ключу
+        assertEquals(ts2, fridayMap.get(new TimeOfDay(13, 0)).getFirst());
+        assertEquals(ts1, fridayMap.get(new TimeOfDay(15, 0)).getFirst());
+        assertEquals(ts3, fridayMap.get(new TimeOfDay(20, 0)).getFirst());
     }
 }

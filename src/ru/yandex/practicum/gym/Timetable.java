@@ -15,11 +15,15 @@ import java.util.*;
  */
 public class Timetable {
 
-    /** Карта «день недели → (время начала → список сеансов)» – хранит занятия по дням и времени. */
+    /**
+     * Карта «день недели → (время начала → список сеансов)» – хранит занятия по дням и времени.
+     */
     private final Map<DayOfWeek, NavigableMap<TimeOfDay, List<TrainingSession>>> timetable =
             new EnumMap<>(DayOfWeek.class);
 
-    /** Счётчик количества сессий для каждого тренера за неделю. */
+    /**
+     * Счётчик количества сессий для каждого тренера за неделю.
+     */
     private final Map<Coach, Integer> coachesCounter = new HashMap<>();
 
     /**
@@ -50,15 +54,8 @@ public class Timetable {
      * @param day день недели; не может быть {@code null}
      * @return неизменяемый набор занятий для указанного дня;
      */
-    public Collection<TrainingSession> getTrainingSessionsForDay(DayOfWeek day) {
-        NavigableMap<TimeOfDay, List<TrainingSession>> slotMap = timetable.get(day);
-        if (slotMap == null) return Collections.emptyList();
-
-        List<TrainingSession> result = new ArrayList<>();
-        for (List<TrainingSession> list : slotMap.values()) {
-            result.addAll(list);
-        }
-        return Collections.unmodifiableList(result);
+    public NavigableMap<TimeOfDay, List<TrainingSession>> getTrainingSessionsForDay(DayOfWeek day) {
+        return Collections.unmodifiableNavigableMap(timetable.getOrDefault(day, new TreeMap<>()));
     }
 
     /**
@@ -70,12 +67,8 @@ public class Timetable {
     public Collection<TrainingSession> getTrainingSessionsForDayAndTime(
             DayOfWeek day, TimeOfDay time) {
 
-        NavigableMap<TimeOfDay, List<TrainingSession>> slotMap = timetable.get(day);
-        if (slotMap == null) return Collections.emptyList();
-
-        List<TrainingSession> list = slotMap.get(time);
-        return list != null ? Collections.unmodifiableList(list)
-                : Collections.emptyList();
+        return Collections.unmodifiableList(timetable.getOrDefault(day, new TreeMap<>())
+                .getOrDefault(time, new ArrayList<>()));
     }
 
     /**
@@ -84,7 +77,7 @@ public class Timetable {
      * отсортированный по убыванию количества занятий.
      *
      * @return неизменяемый список «тренер – количество»;
-     *         никогда не {@code null}
+     * никогда не {@code null}
      */
     public List<CounterOfTrainings> getCountByCoaches() {
         return coachesCounter.entrySet().stream()
