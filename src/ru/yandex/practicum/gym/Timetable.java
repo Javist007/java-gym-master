@@ -30,7 +30,6 @@ public class Timetable {
      * Добавляет новую тренировочную сессию в расписание.
      *
      * @param trainingSession сеанс, который необходимо добавить; не может быть {@code null}
-     * @throws NullPointerException если {@code trainingSession} равен {@code null}
      */
     public void addNewTrainingSession(TrainingSession trainingSession) {
         Objects.requireNonNull(trainingSession, "Тренировочная сессия не может быть null");
@@ -76,8 +75,7 @@ public class Timetable {
      * и возвращает список объектов {@link CounterOfTrainings},
      * отсортированный по убыванию количества занятий.
      *
-     * @return неизменяемый список «тренер – количество»;
-     * никогда не {@code null}
+     * @return неизменяемый список «тренер – количество занятий»;
      */
     public List<CounterOfTrainings> getCountByCoaches() {
         return coachesCounter.entrySet().stream()

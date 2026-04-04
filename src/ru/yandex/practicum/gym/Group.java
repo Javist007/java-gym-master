@@ -31,19 +31,17 @@ public final class Group {
      * @param title    название группы, не {@code null} и непустое
      * @param age      возрастная категория, не {@code null}
      * @param duration длительность в минутах, должно быть >0
-     * @throws NullPointerException     если {@code title} или {@code age} равны {@code null}
-     * @throws IllegalArgumentException если {@code title.isBlank()} или {@code duration <= 0}
      */
     public Group(String title, Age age, int duration) {
-        this.title = Objects.requireNonNull(title, "title must not be null");
+        this.title = Objects.requireNonNull(title, "Название не может быть null");
         if (title.isBlank()) {
-            throw new IllegalArgumentException("title must not be blank");
+            throw new IllegalArgumentException("Название не может быть пустым");
         }
 
-        this.age = Objects.requireNonNull(age, "age must not be null");
+        this.age = Objects.requireNonNull(age, "Возраст не может быть null");
 
         if (duration <= 0) {
-            throw new IllegalArgumentException("duration must be positive");
+            throw new IllegalArgumentException("Продолжительность должна быть положительная");
         }
         this.duration = duration;
     }

@@ -37,7 +37,6 @@ public final class TrainingSession {
      * @param coach     тренер, не {@code null}
      * @param dayOfWeek день недели, не {@code null}
      * @param timeOfDay время начала, не {@code null}
-     * @throws NullPointerException если любой аргумент равен {@code null}
      */
     public TrainingSession(Group group,
                            Coach coach,

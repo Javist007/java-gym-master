@@ -22,7 +22,6 @@ public final class TimeOfDay implements Comparable<TimeOfDay> {
      *
      * @param hours   часы, 0 ≤ hours ≤ 23
      * @param minutes минуты, 0 ≤ minutes ≤ 59
-     * @throws IllegalArgumentException если значения вне диапазона
      */
     public TimeOfDay(int hours, int minutes) {
         if (hours < 0 || hours > 23)

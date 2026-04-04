@@ -22,8 +22,6 @@ public class CounterOfTrainings {
      *
      * @param coach          тренер, чьи занятия считаются; {@code null} запрещено
      * @param trainingCount количество тренировок; должно быть ≥ 0
-     * @throws NullPointerException     если передан {@code null}
-     * @throws IllegalArgumentException если {@code trainingCount} < 0
      */
     public CounterOfTrainings(Coach coach, int trainingCount) {
         this.coach = Objects.requireNonNull(coach,
